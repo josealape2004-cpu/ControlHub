@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Plataforma Diferencial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 15px;
+            justify-content: center;
+            margin: 30px auto;
+        }
+        button {
+            width: 100px;
+            height: 80px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:active { background-color: #0056b3; }
+        .btn-stop { background-color: #dc3545; }
+        .btn-stop:active { background-color: #bd2130; }
+        .status-container {
+            margin-top: 30px;
+            font-size: 20px;
+        }
+        .status-box {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+            background-color: #28a745;
+        }
+        .danger { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <h1>Panel de Control WiFi</h1>
+    
+    <!-- Matriz de botones de control direccional -->
+    <div class="control-panel">
+        <div></div>
+        <button onclick="enviarComando('F')">▲ <br>Avanzar</button>
+        <div></div>
+        
+        <button onclick="enviarComando('L')">◀️ <br>Izq</button>
+        <button class="btn-stop" onclick="enviarComando('S')">■ <br>Stop</button>
+        <button onclick="enviarComando('R')">▶️ <br>Der</button>
+        
+        <div></div>
+        <button onclick="enviarComando('B')">▼ <br>Atrás</button>
+        <div></div>
+    </div>
+
+    <!-- Indicador de presencia / obstáculos exigido por la guía -->
+    <div class="status-container">
+        <p>Estado del Sensor Infrarrojo:</p>
+        <div id="status" class="status-box">SIN OBSTÁCULOS</div>
+    </div>
+
+    <script>
+        // Conexión WebSocket a la IP fija del ESP8266 en modo Access Point
+        var ws = new WebSocket('ws://192.168.4.1:81/');
+
+        ws.onopen = function() {
+            console.log('Conectado al Robot');
+        };
+
+        // Recibe las alertas en tiempo real enviadas desde el PIC a través del ESP8266
+        ws.onmessage = function(event) {
+            var data = event.data;
+            var statusDiv = document.getElementById('status');
+            
+            if (data === "PRESENCIA:SI") {
+                statusDiv.innerText = "¡OBSTÁCULO DETECTADO (>10mm)!";
+                statusDiv.className = "status-box danger";
+            } else if (data === "PRESENCIA:NO") {
+                statusDiv.innerText = "CAMINO LIBRE";
+                statusDiv.className = "status-box";
+            }
+        };
+
+        // Envía el comando de dirección en un solo carácter
+        function enviarComando(letra) {
+            if(ws.readyState === WebSocket.OPEN) {
+                ws.send(letra);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+const WS_URL = "ws://192.168.4.1:81/";
+
+class RobotSocket {
+
+    constructor(url) {
+
+        this.url = url;
+        this.ws = null;
+
+    }
+
+    connect() {
+
+        this.ws = new WebSocket(this.url);
+
+        this.ws.onopen = () => {
+
+            document.dispatchEvent(
+                new CustomEvent("robot:connected")
+            );
+
+        };
+
+        this.ws.onclose = () => {
+
+            document.dispatchEvent(
+                new CustomEvent("robot:disconnected")
+            );
+
+            setTimeout(() => {
+
+                this.connect();
+
+            }, 2000);
+
+        };
+
+        this.ws.onmessage = (event) => {
+
+            document.dispatchEvent(
+
+                new CustomEvent(
+
+                    "robot:message",
+
+                    {
+
+                        detail: event.data
+
+                    }
+
+                )
+
+            );
+
+        };
+
+    }
+
+    send(command) {
+
+        if (
+            this.ws &&
+            this.ws.readyState === WebSocket.OPEN
+        ) {
+
+            this.ws.send(command);
+
+        }
+
+    }
+
+}
+
+window.robotSocket = new RobotSocket(WS_URL);

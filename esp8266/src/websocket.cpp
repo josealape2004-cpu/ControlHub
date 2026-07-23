@@ -1,0 +1,132 @@
+#include "websocket.h"
+
+#include <WebSocketsServer.h>
+
+#include "config.h"
+#include "uart.h"
+
+namespace {
+
+WebSocketsServer websocket(Config::WS_PORT);
+
+constexpr uint8_t NO_CLIENT = 255;
+
+uint8_t activeClient = NO_CLIENT;
+
+char lastCommand = '\0';
+
+void handleEvent(
+
+    uint8_t client,
+    WStype_t type,
+    uint8_t* payload,
+    size_t length
+
+) {
+
+    switch (type) {
+
+    case WStype_CONNECTED:
+
+        if (activeClient == NO_CLIENT) {
+
+            activeClient = client;
+
+            websocket.sendTXT(
+                client,
+                "CONTROL_GRANTED"
+            );
+
+        }
+        else {
+
+            websocket.sendTXT(
+                client,
+                "CONTROL_DENIED"
+            );
+
+            websocket.disconnect(client);
+
+        }
+
+        break;
+
+    case WStype_DISCONNECTED:
+
+        if (client == activeClient) {
+
+            activeClient = NO_CLIENT;
+
+            lastCommand = '\0';
+
+            UartService::sendCommand('S');
+
+        }
+
+        break;
+
+    case WStype_TEXT:
+
+        if (client != activeClient) {
+
+            return;
+
+        }
+
+        if (length != 1) {
+
+            return;
+
+        }
+
+        {
+
+            char command = static_cast<char>(payload[0]);
+
+            if (command == lastCommand) {
+
+                return;
+
+            }
+
+            lastCommand = command;
+
+            UartService::sendCommand(command);
+
+        }
+
+        break;
+
+    default:
+
+        break;
+
+    }
+
+}
+
+}
+
+namespace WebSocketService {
+
+void begin() {
+
+    websocket.begin();
+
+    websocket.onEvent(handleEvent);
+
+}
+
+void loop() {
+
+    websocket.loop();
+
+}
+
+void broadcast(String message) {
+
+    websocket.broadcastTXT(message);
+
+}
+
+}

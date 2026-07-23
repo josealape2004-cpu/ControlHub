@@ -1,35 +1,41 @@
-class RobotController{
+class RobotController {
 
-    forward(){
+    send(command) {
 
-        robotSocket.send("F");
-
-    }
-
-    backward(){
-
-        robotSocket.send("B");
+        robotSocket.send(command);
 
     }
 
-    left(){
+    forward() {
 
-        robotSocket.send("L");
-
-    }
-
-    right(){
-
-        robotSocket.send("R");
+        this.send("F");
 
     }
 
-    stop(){
+    backward() {
 
-        robotSocket.send("S");
+        this.send("B");
+
+    }
+
+    left() {
+
+        this.send("L");
+
+    }
+
+    right() {
+
+        this.send("R");
+
+    }
+
+    stop() {
+
+        this.send("S");
 
     }
 
 }
 
-window.robotController=new RobotController();
+window.robotController = new RobotController();

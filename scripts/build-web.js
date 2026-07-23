@@ -5,44 +5,83 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 
-const FRONTEND = path.join(ROOT, "frontend");
-const GENERATED = path.join(ROOT, "generated");
+const FRONTEND = path.join(
+    ROOT,
+    "frontend"
+);
+
+const GENERATED = path.join(
+    ROOT,
+    "esp8266",
+    "generated"
+);
 
 const FILES = [
+
     {
-        source: path.join(FRONTEND, "index.html"),
+        source: path.join(
+            FRONTEND,
+            "index.html"
+        ),
         output: "index_html.h",
         variable: "INDEX_HTML"
     },
+
     {
-        source: path.join(FRONTEND, "css", "styles.css"),
+        source: path.join(
+            FRONTEND,
+            "css",
+            "styles.css"
+        ),
         output: "style_css.h",
         variable: "STYLE_CSS"
     },
+
     {
-        source: path.join(FRONTEND, "js", "app.js"),
+        source: path.join(
+            FRONTEND,
+            "js",
+            "app.js"
+        ),
         output: "app_js.h",
         variable: "APP_JS"
     },
+
     {
-        source: path.join(FRONTEND, "js", "controller.js"),
+        source: path.join(
+            FRONTEND,
+            "js",
+            "controller.js"
+        ),
         output: "controller_js.h",
         variable: "CONTROLLER_JS"
     },
+
     {
-        source: path.join(FRONTEND, "js", "websocket.js"),
+        source: path.join(
+            FRONTEND,
+            "js",
+            "websocket.js"
+        ),
         output: "websocket_js.h",
         variable: "WEBSOCKET_JS"
     }
+
 ];
 
 function ensureDirectory(directory) {
 
     if (!fs.existsSync(directory)) {
 
-        fs.mkdirSync(directory, {
-            recursive: true
-        });
+        fs.mkdirSync(
+
+            directory,
+
+            {
+                recursive: true
+            }
+
+        );
 
     }
 
@@ -52,7 +91,9 @@ function buildHeader(source, destination, variable) {
 
     if (!fs.existsSync(source)) {
 
-        throw new Error(`Source file not found:\n${source}`);
+        throw new Error(
+            `Source file not found:\n${source}`
+        );
 
     }
 
@@ -75,19 +116,24 @@ function buildHeader(source, destination, variable) {
 // DO NOT EDIT MANUALLY.
 // -----------------------------------------------------------------------------
 
-const char ${variable}[] PROGMEM = R"rawliteral(
+static const char ${variable}[] PROGMEM = R"rawliteral(
 ${content}
 )rawliteral";
+
 `;
 
     fs.writeFileSync(
+
         destination,
+
         header,
+
         "utf8"
+
     );
 
     console.log(
-        `✓ ${path.basename(destination)}`
+        `✓ ${path.relative(ROOT, destination)}`
     );
 
 }
@@ -96,19 +142,27 @@ function main() {
 
     console.log("");
 
-    console.log("Generating web assets...");
+    console.log(
+        "Generating web assets..."
+    );
 
-    ensureDirectory(GENERATED);
+    ensureDirectory(
+        GENERATED
+    );
 
     for (const file of FILES) {
 
         buildHeader(
+
             file.source,
+
             path.join(
                 GENERATED,
                 file.output
             ),
+
             file.variable
+
         );
 
     }

@@ -5,15 +5,38 @@ class RobotSocket {
     constructor(url) {
 
         this.url = url;
+
         this.ws = null;
+
+        this.lastCommand = null;
+
+        this.lastMessage = null;
+
+        this.reconnectTimer = null;
 
     }
 
     connect() {
 
+        if (
+            this.ws &&
+            (
+                this.ws.readyState === WebSocket.OPEN ||
+                this.ws.readyState === WebSocket.CONNECTING
+            )
+        ) {
+
+            return;
+
+        }
+
         this.ws = new WebSocket(this.url);
 
         this.ws.onopen = () => {
+
+            this.lastCommand = null;
+
+            this.lastMessage = null;
 
             document.dispatchEvent(
                 new CustomEvent("robot:connected")
@@ -23,19 +46,37 @@ class RobotSocket {
 
         this.ws.onclose = () => {
 
+            this.lastCommand = null;
+
+            this.lastMessage = null;
+
             document.dispatchEvent(
                 new CustomEvent("robot:disconnected")
             );
 
-            setTimeout(() => {
+            clearTimeout(
+                this.reconnectTimer
+            );
 
-                this.connect();
-
-            }, 2000);
+            this.reconnectTimer = setTimeout(
+                () => this.connect(),
+                2000
+            );
 
         };
 
         this.ws.onmessage = (event) => {
+
+            if (
+                event.data === this.lastMessage
+            ) {
+
+                return;
+
+            }
+
+            this.lastMessage =
+                event.data;
 
             document.dispatchEvent(
 
@@ -60,16 +101,34 @@ class RobotSocket {
     send(command) {
 
         if (
-            this.ws &&
-            this.ws.readyState === WebSocket.OPEN
+
+            command === this.lastCommand
+
         ) {
 
-            this.ws.send(command);
+            return;
 
         }
+
+        if (
+
+            !this.ws ||
+
+            this.ws.readyState !== WebSocket.OPEN
+
+        ) {
+
+            return;
+
+        }
+
+        this.lastCommand = command;
+
+        this.ws.send(command);
 
     }
 
 }
 
-window.robotSocket = new RobotSocket(WS_URL);
+window.robotSocket =
+    new RobotSocket(WS_URL);

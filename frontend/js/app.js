@@ -22,22 +22,87 @@ document
     .querySelectorAll("[data-command]")
     .forEach((button) => {
 
-        button.addEventListener("click", () => {
+        const command = button.dataset.command;
 
-            const command = button.dataset.command;
+        const stop = (event) => {
 
-            actions[command]?.();
+            event.preventDefault();
 
-        });
+            actions.S();
+
+        };
+
+        button.addEventListener(
+
+            "pointerdown",
+
+            (event) => {
+
+                event.preventDefault();
+
+                button.setPointerCapture(
+                    event.pointerId
+                );
+
+                actions[command]?.();
+
+            }
+
+        );
+
+        button.addEventListener(
+            "pointerup",
+            stop
+        );
+
+        button.addEventListener(
+            "pointercancel",
+            stop
+        );
+
+        button.addEventListener(
+            "pointerleave",
+            stop
+        );
 
     });
+
+window.addEventListener(
+
+    "blur",
+
+    () => {
+
+        robotController.stop();
+
+    }
+
+);
+
+document.addEventListener(
+
+    "visibilitychange",
+
+    () => {
+
+        if (document.hidden) {
+
+            robotController.stop();
+
+        }
+
+    }
+
+);
 
 /* ==========================================
    Connection Status
 ========================================== */
 
 const connection =
-    document.getElementById("connection-status");
+    document.getElementById(
+        "connection-status"
+    );
 
 document.addEventListener(
 
@@ -45,8 +110,11 @@ document.addEventListener(
 
     () => {
 
-        connection.textContent = "Conectado";
-        connection.className = "status-box connected";
+        connection.textContent =
+            "Conectado";
+
+        connection.className =
+            "status-box connected";
 
     }
 
@@ -58,8 +126,13 @@ document.addEventListener(
 
     () => {
 
-        connection.textContent = "Desconectado";
-        connection.className = "status-box disconnected";
+        connection.textContent =
+            "Desconectado";
+
+        connection.className =
+            "status-box disconnected";
+
+        robotController.stop();
 
     }
 
@@ -70,7 +143,9 @@ document.addEventListener(
 ========================================== */
 
 const sensor =
-    document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
 
 document.addEventListener(
 
@@ -79,6 +154,32 @@ document.addEventListener(
     (event) => {
 
         const msg = event.detail;
+
+        if (msg === "CONTROL_GRANTED") {
+
+            connection.textContent =
+                "Control asignado";
+
+            connection.className =
+                "status-box connected";
+
+            return;
+
+        }
+
+        if (msg === "CONTROL_DENIED") {
+
+            connection.textContent =
+                "Control ocupado";
+
+            connection.className =
+                "status-box disconnected";
+
+            robotController.stop();
+
+            return;
+
+        }
 
         if (msg === "PRESENCIA:SI") {
 
